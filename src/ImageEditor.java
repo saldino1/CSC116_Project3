@@ -1,120 +1,288 @@
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.*;
 
+/**
+ * ImageEditor class changes images
+ * Inverst, high contrast or greyscale options
+ * @author Amelia Saldino
+ */
 public class ImageEditor {
-    public static void main(String[] args) {
-        try (Scanner scanner = new Scanner(System.in)) {
+    /** Color threshold for high contrast transformation. */
+    private static final int HIGH_CONTRAST_THRESHOLD = 128;
 
+    /** Maximum color value for PPM files. */
+    private static final int MAX_COLOR_VALUE = 255;
+    /**
+     * Main method
+     * Expects three command-line arguments: flag, input file, and output file.
+     *
+     * @param args Command line arguments
+     */
+    public static void main(String[] args) {
+        if(args.length != 3) {
+            System.err.println("Usage: java -cp bin ImageEditor {-I|-H|-G} infile outfile");
+            return;
+        }
+
+        String flag = args[0];
+        String infile = args[1];
+        String outfile = args[2];
+
+        if (!flag.equals("-I") && !flag.equals("-H") && !flag.equals("-G")) {
+            System.out.println("Usage: java -cp bin ImageEditor {-I|-H|-G} infile outfile");
+            return;
+        }
+
+        if(!infile.endsWith(".ppm")) {
+            System.err.println("Invalid input file extension");
+            return;
+        }
+
+        if(!outfile.endsWith(".ppm")) {
+            System.err.println("Invalid output file extension");
+            return;
+        }
+        
+        Scanner scanner = new Scanner(System.in);
+        
+
+        try (FileInputStream fis = new FileInputStream(infile)) {
+
+        } catch (IOException e) {
+            System.err.println("Unable to access input file: " + infile);
             scanner.close();
+            return;
+        }
+
+        if (fileExists(outfile)) {
+            try (Scanner keyBoardScanner = new Scanner(System.in)) {
+                System.out.print(outfile + " exists - OK to overwrite(y,n)?: ");
+                String response = keyBoardScanner.nextLine();
+                if (!response.trim().toLowerCase().startsWith("y")) {
+                    keyBoardScanner.close();
+                    return;
+                }
+            }
+        } 
+
+        try (FileOutputStream fos = new FileOutputStream(outfile);
+             PrintWriter writer = new PrintWriter(fos)) {
+
+            FileInputStream fis = new FileInputStream(infile);
+            Scanner in = new Scanner(fis);
+            int[][] pixels = getPixelValues(in);
+            
+            if(flag.equals("-I")) {
+                invert(pixels);
+            }
+            if(flag.equals("-H")) {
+                highContrast(pixels);
+            }
+            if(flag.equals("-G")) {
+                greyScale(pixels);
+            }
+            outputPPM(writer, pixels);
+            writer.close();
+        }
+        catch (FileNotFoundException e) {
+            System.out.println("Cannot create output file");
+            scanner.close();
+            return;
+        }
+        catch (IOException e) {
+            System.out.println("Cannot create output file");
+            scanner.close();
+            return;
+        }
+        
+        scanner.close();
+    }
+
+    /**
+     * Checks if a file exists
+     * @param filename name of the file to check
+     * @return true if the file exists, false otherwise
+     */
+    private static boolean fileExists(String filename) {
+        try (FileInputStream fis = new FileInputStream(filename)) {
+            return true; 
+        } catch (IOException e) {
+            return false; 
         }
     }
 
-    //Reads and validates the ppm file and returns
-    //a 2D array containing the pixel RGB values
-    //
-    //The number of elements in each row of the array
-    //will be 3 * the number of columns of pixels, since
-    //3 integers are used to represent each pixel.
-    //
-    //Returns null, if any of the following are true
-    //  - the first token in the file is not the string "P3"
-    //  - the second token in the file, which represents the 
-    //    number of columns, is not a positive integer
-    //  - the third token in the file, which represents the 
-    //    number of rows, is not a positive integer
-    //  - the fourth token in the file is not the integer 255
-    //  - the fourth token is not followed by 
-    //    rows * cols * 3 integer values in the range 0 - 255
-    //Any remaining tokens may be ignored. 
-    //
-    //Throws an IllegalArgumentException with the message
-    //"Null file" if in is null   
+    /**
+     * Reads PPM turning it into 2d int array
+     * @param in Scanner for the input file
+     * @return a 2D array of pixel values
+     * @return null if validation impossible
+     * @throws IllegalArgumentException if the input is invalid
+     */
     public static int[][] getPixelValues(Scanner in) {
-        return null;        
+        if (in == null) {
+            throw new IllegalArgumentException("Null file");
+        }
+
+        String format = in.next();
+        if (!format.equals("P3")) {
+            return null; 
+        }
+
+        int cols = in.nextInt();
+        if (cols <= 0) {
+            return null; 
+        }
+
+        int rows = in.nextInt();
+        if (rows <= 0) {
+            return null; 
+        }
+
+        int maxColorVal = in.nextInt();
+        if (maxColorVal != MAX_COLOR_VALUE) {
+            return null; 
+        }
+
+        int[][] pixelValues = new int[rows][cols * 3]; 
+
+        for (int i = 0; i < rows; i++) {
+            for(int j = 0; j < cols * 3; j++) {
+                if (in.hasNextInt()) {
+                    int value = in.nextInt();
+                    if (value < 0 || value > MAX_COLOR_VALUE) {
+                        return null; 
+                    }
+                    pixelValues[i][j] = value; 
+                } else {
+                    return null; // Not enough values
+                }
+            }
+            
+        }
+
+        return pixelValues;
     }
 
-    //Inverts each of the RGB values in the pixels array
-    //
-    //Throws an IllegalArgumentException with the message
-    //"Null array" if pixels is null
-    //
-    //Throws an IllegalArgumentException with the message
-    //"Invalid array" if the number of elements in row 0
-    //is not a multiple of 3
-    //
-    //Throws an IllegalArgumentException with the message
-    //"Jagged array" if the pixels array is "jagged", i.e.,
-    //each row does not have the same number of elements as
-    //every other row.
-    //
-    //NOTE: You must check for invalid parameters (arguments) in the order given above.
-    public static void invert(int[][] pixels) {    
+    /**
+     * Inverts the pixel array
+     * @param pixels The 2D array of pixel values
+     * @throws IllegalArgumentException if the pixels array is null, invalid, or jagged
+     */
+    public static void invert(int[][] pixels) {   
+         
+        if(pixels == null) {
+            throw new IllegalArgumentException("Null array");
+        }
+        if(pixels.length > 0 && pixels[0].length % 3 != 0) {
+            throw new IllegalArgumentException("Invalid array");
+        }
+        for(int i = 0; i < pixels.length; ++i) {
+            if(pixels[0].length != pixels[i].length) {
+                throw new IllegalArgumentException("Jagged array");
+            }
+        }
 
+        for(int i = 0; i < pixels.length; ++i) {
+            for(int j = 0; j < pixels[i].length; ++j) {
+                pixels[i][j] = MAX_COLOR_VALUE - pixels[i][j];
+            }
+        }
     }
 
-    //Converts the RGB values in the pixels array to high contrast
-    //
-    //Throws an IllegalArgumentException with the message
-    //"Null array" if pixels is null
-    //
-    //Throws an IllegalArgumentException with the message
-    //"Invalid array" if the number of elements in row 0
-    //is not a multiple of 3
-    //    
-    //Throws an IllegalArgumentException with the message
-    //"Jagged array" if the pixels array is "jagged", i.e.,
-    //each row does not have the same number of elements as
-    //every other row.
-    //
-    //NOTE: You must check for invalid parameters (arguments) in the order given above.
+    /**
+     * Converts to high contrast
+     * @param pixels The 2D array of pixel values
+     * @throws IllegalArgumentException if the pixels array is null, invalid, or jagged
+     */
     public static void highContrast(int[][] pixels) {
-                                
+        if(pixels == null) {
+            throw new IllegalArgumentException("Null array");
+        }
+        if(pixels.length > 0 && pixels[0].length % 3 != 0) {
+            throw new IllegalArgumentException("Invalid array");
+        }
+        for(int i = 0; i < pixels.length; ++i) {
+            if(pixels[0].length != pixels[i].length) {
+                throw new IllegalArgumentException("Jagged array");
+            }
+        }
+        for(int i = 0; i < pixels.length; ++i) {
+            for(int j = 0; j < pixels[i].length; ++j) {
+                if(pixels[i][j] < HIGH_CONTRAST_THRESHOLD) {
+                    pixels[i][j] = 0;
+                }
+                else {
+                    pixels[i][j] = MAX_COLOR_VALUE;
+                }
+            }
+        }
+        
     }
 
-    //Converts the RGB values in the pixels array to grey scale
-    //
-    //Throws an IllegalArgumentException with the message
-    //"Null array" if pixels is null
-    //
-    //Throws an IllegalArgumentException with the message
-    //"Invalid array" if the number of elements in row 0
-    //is not a multiple of 3
-    //
-    //Throws an IllegalArgumentException with the message
-    //"Jagged array" if the pixels array is "jagged", i.e.,
-    //each row does not have the same number of elements as
-    //every other row.
-    //
-    //NOTE: You must check for invalid parameters (arguments) in the order given above.
+    /**
+     * Converts to greyscalez
+     * @param pixels The 2D array of pixel values
+     * @throws IllegalArgumentException if the pixels array is null, invalid, or jagged
+     */
     public static void greyScale(int[][] pixels) {
-                                    
+        if(pixels == null) {
+            throw new IllegalArgumentException("Null array");
+        }
+        if(pixels.length > 0 && pixels[0].length % 3 != 0) {
+            throw new IllegalArgumentException("Invalid array");
+        }
+        for(int i = 0; i < pixels.length; ++i) {
+            if(pixels[0].length != pixels[i].length) {
+                throw new IllegalArgumentException("Jagged array");
+            }
+        }
+
+        for(int i = 0; i < pixels.length; ++i) {
+            for(int j = 0; j < pixels[i].length; ++j) {
+                if (j % 3 != 0) {
+                    continue;
+                }
+                int average = (pixels[i][j] + pixels[i][j+1] + pixels[i][j+2])/3;
+                pixels[i][j] = average;
+                pixels[i][j+1] = average;
+                pixels[i][j+2] = average;
+            }
+        }
     }
 
-    //Outputs the following lines to out
-    //Line 1: P3
-    //Line 2: number of columns followed by a single space followed by the number of rows
-    //Line 3: 255
-    //followed by lines that contain the rows of pixels. Each row of pixels 
-    //must be on a separate line with one space between
-    //each RGB value on the line, but no space after the last value on the line.
-    //
-    //Throws an IllegalArgumentException with the message
-    //"Null file" if out is null
-    //
-    //Throws an IllegalArgumentException with the message
-    //"Null array" if pixels is null
-    //
-    //Throws an IllegalArgumentException with the message
-    //"Invalid array" if the number of elements in row 0
-    //is not a multiple of 3
-    //
-    //Throws an IllegalArgumentException with the message
-    //"Jagged array" if the pixels array is "jagged", i.e.,
-    //each row does not have the same number of elements as
-    //every other row.
-    //
-    //NOTE: You must check for invalid parameters (arguments) in the order given above.
+    /**
+     * Outputs the pixel values to file
+     * @param out The PrintWriter to output
+     * @param pixels The 2D array of pixel values
+     * @throws IllegalArgumentException if the output writer or pixels array is null, invalid, or jagged
+     */
     public static void outputPPM(PrintWriter out, int[][] pixels) {
-    
+        if (out == null) {
+            throw new IllegalArgumentException("Null file");
+        }
+        if(pixels == null) {
+            throw new IllegalArgumentException("Null array");
+        }
+        if(pixels.length > 0 && pixels[0].length % 3 != 0) {
+            throw new IllegalArgumentException("Invalid array");
+        }
+        for(int i = 0; i < pixels.length; ++i) {
+            if(pixels[0].length != pixels[i].length) {
+                throw new IllegalArgumentException("Jagged array");
+            }
+        }
+        out.println("P3");
+        out.println(pixels[0].length / 3 + " " + pixels.length); // number of columns and rows
+        out.printf("%d\n", MAX_COLOR_VALUE);
+
+        for(int i = 0; i < pixels.length; i++) {
+            for (int j = 0; j < pixels[i].length; j++) {
+                out.print(pixels[i][j]);
+                if (j < pixels[i].length - 1) {
+                    out.print(" "); 
+                }
+            }
+            out.println();
+        }
     }
 }
