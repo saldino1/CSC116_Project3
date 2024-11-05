@@ -12,6 +12,13 @@ public class ImageEditor {
 
     /** Maximum color value for PPM files. */
     private static final int MAX_COLOR_VALUE = 255;
+
+    /** Number of Values in RGB */
+    private static final int NUM_VAL_RGB = 3;
+
+    /** Number of correct cmd line args */
+    private static final int VALID_CMD = 3;
+
     /**
      * Main method
      * Expects three command-line arguments: flag, input file, and output file.
@@ -19,7 +26,7 @@ public class ImageEditor {
      * @param args Command line arguments
      */
     public static void main(String[] args) {
-        if(args.length != 3) {
+        if(args.length != VALID_CMD) {
             System.err.println("Usage: java -cp bin ImageEditor {-I|-H|-G} infile outfile");
             return;
         }
@@ -46,7 +53,7 @@ public class ImageEditor {
         Scanner scanner = new Scanner(System.in);
         
 
-        try (FileInputStream fis = new FileInputStream(infile)) {
+        try (FileInputStream file = new FileInputStream(infile)) {
 
         } catch (IOException e) {
             System.err.println("Unable to access input file: " + infile);
@@ -68,8 +75,8 @@ public class ImageEditor {
         try (FileOutputStream fos = new FileOutputStream(outfile);
              PrintWriter writer = new PrintWriter(fos)) {
 
-            FileInputStream fis = new FileInputStream(infile);
-            Scanner in = new Scanner(fis);
+            FileInputStream file = new FileInputStream(infile);
+            Scanner in = new Scanner(file);
             int[][] pixels = getPixelValues(in);
             
             if(flag.equals("-I")) {
@@ -104,7 +111,7 @@ public class ImageEditor {
      * @return true if the file exists, false otherwise
      */
     private static boolean fileExists(String filename) {
-        try (FileInputStream fis = new FileInputStream(filename)) {
+        try (FileInputStream file = new FileInputStream(filename)) {
             return true; 
         } catch (IOException e) {
             return false; 
@@ -143,10 +150,10 @@ public class ImageEditor {
             return null; 
         }
 
-        int[][] pixelValues = new int[rows][cols * 3]; 
+        int[][] pixelValues = new int[rows][cols * NUM_VAL_RGB]; 
 
         for (int i = 0; i < rows; i++) {
-            for(int j = 0; j < cols * 3; j++) {
+            for(int j = 0; j < cols * NUM_VAL_RGB; j++) {
                 if (in.hasNextInt()) {
                     int value = in.nextInt();
                     if (value < 0 || value > MAX_COLOR_VALUE) {
@@ -173,7 +180,7 @@ public class ImageEditor {
         if(pixels == null) {
             throw new IllegalArgumentException("Null array");
         }
-        if(pixels.length > 0 && pixels[0].length % 3 != 0) {
+        if(pixels.length > 0 && pixels[0].length % NUM_VAL_RGB != 0) {
             throw new IllegalArgumentException("Invalid array");
         }
         for(int i = 0; i < pixels.length; ++i) {
@@ -198,7 +205,7 @@ public class ImageEditor {
         if(pixels == null) {
             throw new IllegalArgumentException("Null array");
         }
-        if(pixels.length > 0 && pixels[0].length % 3 != 0) {
+        if(pixels.length > 0 && pixels[0].length % NUM_VAL_RGB != 0) {
             throw new IllegalArgumentException("Invalid array");
         }
         for(int i = 0; i < pixels.length; ++i) {
@@ -228,7 +235,7 @@ public class ImageEditor {
         if(pixels == null) {
             throw new IllegalArgumentException("Null array");
         }
-        if(pixels.length > 0 && pixels[0].length % 3 != 0) {
+        if(pixels.length > 0 && pixels[0].length % NUM_VAL_RGB != 0) {
             throw new IllegalArgumentException("Invalid array");
         }
         for(int i = 0; i < pixels.length; ++i) {
@@ -239,7 +246,7 @@ public class ImageEditor {
 
         for(int i = 0; i < pixels.length; ++i) {
             for(int j = 0; j < pixels[i].length; ++j) {
-                if (j % 3 != 0) {
+                if (j % NUM_VAL_RGB != 0) {
                     continue;
                 }
                 int average = (pixels[i][j] + pixels[i][j+1] + pixels[i][j+2])/3;
@@ -263,7 +270,7 @@ public class ImageEditor {
         if(pixels == null) {
             throw new IllegalArgumentException("Null array");
         }
-        if(pixels.length > 0 && pixels[0].length % 3 != 0) {
+        if(pixels.length > 0 && pixels[0].length % NUM_VAL_RGB != 0) {
             throw new IllegalArgumentException("Invalid array");
         }
         for(int i = 0; i < pixels.length; ++i) {
@@ -272,7 +279,7 @@ public class ImageEditor {
             }
         }
         out.println("P3");
-        out.println(pixels[0].length / 3 + " " + pixels.length); // number of columns and rows
+        out.println(pixels[0].length / NUM_VAL_RGB + " " + pixels.length); // number of columns and rows
         out.printf("%d\n", MAX_COLOR_VALUE);
 
         for(int i = 0; i < pixels.length; i++) {

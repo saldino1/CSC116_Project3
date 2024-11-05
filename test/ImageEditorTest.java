@@ -19,13 +19,39 @@ public class ImageEditorTest {
 
     /** One red pixel inverted */
     public static final int[][] ONE_RED_PIXEL_INVERTED = {{0, 255, 255}};
+
+    /** One green pixel inverted */
+    public static final int[][] ONE_GREEN_PIXEL_INVERTED = {{255, 0, 255}};
+
+    /** One blue pixel inverted */
+    public static final int[][] ONE_BLUE_PIXEL_INVERTED = {{255, 255, 0}};
+
+    /** One black pixel inverted */
+    public static final int[][] ONE_BLACK_PIXEL_INVERTED = {{255, 255, 255}};
     
     /** One red pixel high contrast */
     public static final int[][] ONE_RED_PIXEL_HIGH_CONSTRAST = {{255, 0, 0}};
+
+    /** One green pixel high contrast */
+    public static final int[][] ONE_GREEN_PIXEL_HIGH_CONSTRAST = {{0, 255, 0}};
+
+    /** One blue pixel high contrast */
+    public static final int[][] ONE_BLUE_PIXEL_HIGH_CONSTRAST = {{0, 0, 255}};
+
+    /** One yellow pixel high contrast */
+    public static final int[][] ONE_YELLOW_PIXEL_HIGH_CONSTRAST = {{255, 255, 0}};
     
-    /** One red pixel inverted */
+    /** One red pixel grey scale */
     public static final int[][] ONE_RED_PIXEL_GREY_SCALE = {{85, 85, 85}};
     
+    /** One green pixel grey scale */
+    public static final int[][] ONE_GREEN_PIXEL_GREY_SCALE = {{85, 85, 85}};
+
+    /** One blue pixel grey scale */
+    public static final int[][] ONE_BLUE_PIXEL_GREY_SCALE = {{85, 85, 85}};
+
+    /** One yellow pixel grey scale */
+    public static final int[][] ONE_YELLOW_PIXEL_GREY_SCALE = {{170, 170, 170}};
  
     /**
      * Test inverting one red pixel
@@ -36,6 +62,30 @@ public class ImageEditorTest {
         int[][] oneRedPixel = {{255, 0, 0}};
         ImageEditor.invert(oneRedPixel);
         assertArrayEquals(ONE_RED_PIXEL_INVERTED, oneRedPixel, description);
+    }
+
+    @Test
+    public void testInvert2() {
+        String description = "Invert 2: one green pixel";
+        int[][] oneGreenPixel = {{0, 255, 0}};
+        ImageEditor.invert(oneGreenPixel);
+        assertArrayEquals(ONE_GREEN_PIXEL_INVERTED, oneGreenPixel, description);
+    }
+
+    @Test
+    public void testInvert3() {
+        String description = "Invert 3: one blue pixel";
+        int[][] oneBluePixel = {{0, 0, 255}};
+        ImageEditor.invert(oneBluePixel);
+        assertArrayEquals(ONE_BLUE_PIXEL_INVERTED, oneBluePixel, description);
+    }
+
+    @Test
+    public void testInvert4() {
+        String description = "Invert 4: one black pixel";
+        int[][] oneBlackPixel = {{0, 0, 0}};
+        ImageEditor.invert(oneBlackPixel);
+        assertArrayEquals(ONE_BLACK_PIXEL_INVERTED, oneBlackPixel, description);
     }
 
     // TODO: Add 4 more test cases here for invert method. Each test
@@ -52,6 +102,31 @@ public class ImageEditorTest {
         assertArrayEquals(ONE_RED_PIXEL_HIGH_CONSTRAST, oneRedPixel, description);
     }
 
+    @Test
+    public void testHighContrast2() {
+        String description = "High Constrast 2: one green pixel";
+        int[][] oneGreenPixel = {{0, 200, 0}};
+        ImageEditor.highContrast(oneGreenPixel);
+        assertArrayEquals(ONE_GREEN_PIXEL_HIGH_CONSTRAST, oneGreenPixel, description);
+    }
+
+    @Test
+    public void testHighContrast3() {
+        String description = "High Constrast 3: one blue pixel";
+        int[][] oneBluePixel = {{0, 0, 200}};
+        ImageEditor.highContrast(oneBluePixel);
+        assertArrayEquals(ONE_BLUE_PIXEL_HIGH_CONSTRAST, oneBluePixel, description);
+    }
+
+    @Test
+    public void testHighContrast4() {
+        String description = "High Constrast 4: one yellow pixel";
+        int[][] oneYellowPixel = {{200, 200, 0}};
+        ImageEditor.highContrast(oneYellowPixel);
+        assertArrayEquals(ONE_YELLOW_PIXEL_HIGH_CONSTRAST, oneYellowPixel, description);
+    }
+
+
     // TODO: Add 4 more test cases here for highContrast method. Each test
     // should be in its own method, such as testHighContrast2, testHighContrast3, etc.
 
@@ -65,7 +140,27 @@ public class ImageEditorTest {
         ImageEditor.greyScale(oneRedPixel);
         assertArrayEquals(ONE_RED_PIXEL_GREY_SCALE, oneRedPixel, description);
     }
-
+    @Test
+    public void testGreyScale2() {
+        String description = "Grey Scale 2: one green pixel";
+        int[][] oneGreenPixel = {{0, 255, 0}};
+        ImageEditor.greyScale(oneGreenPixel);
+        assertArrayEquals(ONE_GREEN_PIXEL_GREY_SCALE, oneGreenPixel, description);
+    }
+    @Test
+    public void testGreyScale3() {
+        String description = "Grey Scale 3: one blue pixel";
+        int[][] oneBluePixel = {{0, 0, 255}};
+        ImageEditor.greyScale(oneBluePixel);
+        assertArrayEquals(ONE_BLUE_PIXEL_GREY_SCALE, oneBluePixel, description);
+    }
+    @Test
+    public void testGreyScale4() {
+        String description = "Grey Scale 4: one yellow pixel";
+        int[][] oneYellowPixel = {{255, 255, 0}};
+        ImageEditor.greyScale(oneYellowPixel);
+        assertArrayEquals(ONE_YELLOW_PIXEL_GREY_SCALE, oneYellowPixel, description);
+    }
     // TODO: Add 4 more test cases here for greyScale method. Each test
     // should be in its own method, such as testGreyScale2, testGreyScale3, etc.
 
