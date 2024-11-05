@@ -27,7 +27,7 @@ public class ImageEditor {
      */
     public static void main(String[] args) {
         if(args.length != VALID_CMD) {
-            System.err.println("Usage: java -cp bin ImageEditor {-I|-H|-G} infile outfile");
+            System.out.println("Usage: java -cp bin ImageEditor {-I|-H|-G} infile outfile");
             return;
         }
 
@@ -41,22 +41,23 @@ public class ImageEditor {
         }
 
         if(!infile.endsWith(".ppm")) {
-            System.err.println("Invalid input file extension");
+            System.out.println("Invalid input file extension");
             return;
         }
 
         if(!outfile.endsWith(".ppm")) {
-            System.err.println("Invalid output file extension");
+            System.out.println("Invalid output file extension");
             return;
         }
         
         Scanner scanner = new Scanner(System.in);
         
 
-        try (FileInputStream file = new FileInputStream(infile)) {
-
+        try {
+            FileInputStream file = new FileInputStream(infile);
+            file.close();
         } catch (IOException e) {
-            System.err.println("Unable to access input file: " + infile);
+            System.out.println("Unable to access input file: " + infile);
             scanner.close();
             return;
         }
@@ -74,9 +75,20 @@ public class ImageEditor {
 
         try (FileOutputStream fos = new FileOutputStream(outfile);
              PrintWriter writer = new PrintWriter(fos)) {
+            
+            FileInputStream testFile = new FileInputStream(infile);
+        
+            Scanner inTesting = new Scanner(testFile);
+            if(!validInputFile(inTesting)) {
+                System.out.println("Invalid input file");
+                inTesting.close();
+                return;
+            }
+            inTesting.close();
 
             FileInputStream file = new FileInputStream(infile);
             Scanner in = new Scanner(file);
+
             int[][] pixels = getPixelValues(in);
             
             if(flag.equals("-I")) {
@@ -112,6 +124,7 @@ public class ImageEditor {
      */
     private static boolean fileExists(String filename) {
         try (FileInputStream file = new FileInputStream(filename)) {
+            file.close();
             return true; 
         } catch (IOException e) {
             return false; 
@@ -119,10 +132,51 @@ public class ImageEditor {
     }
 
     /**
+     * Checks if inputfile is correctly formatted
+     * @param in scanner object to read first part of file
+     * @return true if the file is valid, false otherwise
+     * @throws IllegalArgumentException if scanner is null
+     */
+    private static boolean validInputFile(Scanner in) {
+        if (in == null) {
+            throw new IllegalArgumentException("Null scanner");
+        }
+
+        String format = in.next();
+        if (!format.equals("P3")) {
+            return false; 
+        }
+
+        if(!in.hasNextInt()) {
+            return false;
+        }
+        int cols = in.nextInt();
+        if (cols <= 0) {
+            return false; 
+        }
+
+        if(!in.hasNextInt()) {
+            return false;
+        }
+        int rows = in.nextInt();
+        if (rows <= 0) {
+            return false; 
+        }
+
+        if(!in.hasNextInt()) {
+            return false;
+        }
+        int maxColorVal = in.nextInt();
+        if (maxColorVal != MAX_COLOR_VALUE) {
+            return false; 
+        }
+        return true;
+    }
+
+    /**
      * Reads PPM turning it into 2d int array
      * @param in Scanner for the input file
-     * @return a 2D array of pixel values
-     * @return null if validation impossible
+     * @return a 2D array of pixel values, null if validation impossible
      * @throws IllegalArgumentException if the input is invalid
      */
     public static int[][] getPixelValues(Scanner in) {
@@ -132,21 +186,37 @@ public class ImageEditor {
 
         String format = in.next();
         if (!format.equals("P3")) {
+            System.out.println(format);
             return null; 
         }
 
+        if(!in.hasNextInt()) {
+            System.out.println("Bello20001");
+            return null;
+        }
         int cols = in.nextInt();
         if (cols <= 0) {
+            System.out.println("Bello5");
             return null; 
         }
 
+        if(!in.hasNextInt()) {
+            System.out.println("Bello4");
+            return null;
+        }
         int rows = in.nextInt();
         if (rows <= 0) {
+            System.out.println("Bello3");
             return null; 
         }
 
+        if(!in.hasNextInt()) {
+            System.out.println("Bello2");
+            return null;
+        }
         int maxColorVal = in.nextInt();
         if (maxColorVal != MAX_COLOR_VALUE) {
+            System.out.println("Bello");
             return null; 
         }
 
@@ -156,12 +226,7 @@ public class ImageEditor {
             for(int j = 0; j < cols * NUM_VAL_RGB; j++) {
                 if (in.hasNextInt()) {
                     int value = in.nextInt();
-                    if (value < 0 || value > MAX_COLOR_VALUE) {
-                        return null; 
-                    }
                     pixelValues[i][j] = value; 
-                } else {
-                    return null; // Not enough values
                 }
             }
             
@@ -249,10 +314,10 @@ public class ImageEditor {
                 if (j % NUM_VAL_RGB != 0) {
                     continue;
                 }
-                int average = (pixels[i][j] + pixels[i][j+1] + pixels[i][j+2])/3;
+                int average = (pixels[i][j] + pixels[i][j + 1] + pixels[i][j + 2]) / 3;
                 pixels[i][j] = average;
-                pixels[i][j+1] = average;
-                pixels[i][j+2] = average;
+                pixels[i][j + 1] = average;
+                pixels[i][j + 2] = average;
             }
         }
     }
@@ -261,7 +326,8 @@ public class ImageEditor {
      * Outputs the pixel values to file
      * @param out The PrintWriter to output
      * @param pixels The 2D array of pixel values
-     * @throws IllegalArgumentException if the output writer or pixels array is null, invalid, or jagged
+     * @throws IllegalArgumentException if the 
+     * output writer or pixels array is null, invalid, or jagged
      */
     public static void outputPPM(PrintWriter out, int[][] pixels) {
         if (out == null) {
@@ -279,7 +345,7 @@ public class ImageEditor {
             }
         }
         out.println("P3");
-        out.println(pixels[0].length / NUM_VAL_RGB + " " + pixels.length); // number of columns and rows
+        out.println(pixels[0].length / NUM_VAL_RGB + " " + pixels.length);
         out.printf("%d\n", MAX_COLOR_VALUE);
 
         for(int i = 0; i < pixels.length; i++) {
